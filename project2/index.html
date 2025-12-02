@@ -1,0 +1,233 @@
+<!--
+Source - https://stackoverflow.com/a
+Posted by user1083202, modified by community. See post 'Timeline' for change history
+Retrieved 2025-12-02, License - CC BY-SA 3.0
+-->
+
+ <html>
+    <header>
+        <style>
+            .container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    align-items: flex-start;
+    font-family: Arial, sans-serif;
+}
+
+#can {
+    border: 2px solid #000;
+    border-radius: 4px;
+}
+
+.tools {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 120px;
+}
+
+.section-title {
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.color-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.color-btn.black {
+    background: black;
+}
+
+.color-btn.white {
+    background: white;
+    border: 2px solid #000;
+}
+
+button {
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.prediction-output {
+    min-height: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+        </style>
+    <script type="text/javascript">
+    var canvas, ctx, flag = false,
+        prevX = 0,
+        currX = 0,
+        prevY = 0,
+        currY = 0,
+        dot_flag = false;
+
+    var x = "black",
+        y = 28;
+
+    const Y=28;
+    
+    function init() {
+        canvas = document.getElementById('can');
+        ctx = canvas.getContext("2d");
+        w = canvas.width;
+        h = canvas.height;
+        // ctx.fillStyle("white");
+        // ctx.fillRect(0,0,w,h);
+        // ctx.fillStyle("black");
+    
+        canvas.addEventListener("mousemove", function (e) {
+            findxy('move', e)
+        }, false);
+        canvas.addEventListener("mousedown", function (e) {
+            findxy('down', e)
+        }, false);
+        canvas.addEventListener("mouseup", function (e) {
+            findxy('up', e)
+        }, false);
+        canvas.addEventListener("mouseout", function (e) {
+            findxy('out', e)
+            predict()
+        }, false);
+
+    }
+    
+    function color(obj) {
+        switch (obj.id) {
+            case "green":
+                x = "green";
+                break;
+            case "blue":
+                x = "blue";
+                break;
+            case "red":
+                x = "red";
+                break;
+            case "yellow":
+                x = "yellow";
+                break;
+            case "orange":
+                x = "orange";
+                break;
+            case "black":
+                x = "black";
+                break;
+            case "white":
+                x = "white";
+                break;
+        }
+        if (x == "white") y = Y*2;
+        else y = Y;
+    
+    }
+    
+    function draw() {
+        ctx.beginPath();
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(currX, currY);
+        ctx.strokeStyle = x;
+        ctx.lineWidth = y;
+        ctx.stroke();
+        ctx.closePath();
+    }
+    
+    function erase() {
+        var m = true;//confirm("Want to clear");
+        if (m) {
+            ctx.clearRect(0, 0, w, h);
+            document.getElementById("canvasimg").style.display = "none";
+        }
+    }
+    
+    function save() {
+        document.getElementById("canvasimg").style.border = "2px solid";
+        var dataURL = canvas.toDataURL();
+        document.getElementById("canvasimg").src = dataURL;
+        document.getElementById("canvasimg").style.display = "inline";
+    }
+
+    async function predict() {
+        canvas = document.getElementById("can");
+        src = canvas.toDataURL();
+        try{
+            const response = await fetch("http://localhost:8000/predict",{
+                method: "POST",
+                'Content-Type': 'application/json',
+                "Access-Control-Allow-Origin": "*",
+                body: JSON.stringify({
+                    input: src
+                })
+            });
+            const data = await response.json();
+            console.log(data);
+            document.getElementById("prd-out").innerHTML = data.output;
+        } catch(error){
+            console.error(error.message);
+        }
+    }
+    
+    function findxy(res, e) {
+        if (res == 'down') {
+            prevX = currX;
+            prevY = currY;
+            currX = e.clientX - canvas.offsetLeft;
+            currY = e.clientY - canvas.offsetTop;
+    
+            flag = true;
+            dot_flag = true;
+            if (dot_flag) {
+                ctx.beginPath();
+                ctx.fillStyle = x;
+                ctx.fillRect(currX, currY, 2, 2);
+                ctx.closePath();
+                dot_flag = false;
+            }
+        }
+        if (res == 'up' || res == "out") {
+            flag = false;
+        }
+        if (res == 'move') {
+            if (flag) {
+                prevX = currX;
+                prevY = currY;
+                currX = e.clientX - canvas.offsetLeft;
+                currY = e.clientY - canvas.offsetTop;
+                draw();
+            }
+        }
+    }
+    </script>
+    </header>
+    <body onload="init()">
+       <div class="container">
+    <canvas id="can" width="400" height="400"></canvas>
+
+    <div class="tools">
+        <div class="section-title">Pencil</div>
+        <div class="color-btn black" id="black" onclick="color(this)"></div>
+
+        <div class="section-title">Eraser</div>
+        <div class="color-btn white" id="white" onclick="color(this)"></div>
+
+        <button id="clr" onclick="erase()">Clear</button>
+
+        <div class="section-title">Prediction</div>
+        <div id="prd-out" class="prediction-output"></div>
+
+        <img id="canvasimg" style="display:none;">
+    </div>
+</div>
+        <!-- <div style="position:absolute;top:15%;left:45%;width:10px;height:10px;background:green;" id="green" onclick="color(this)"></div>
+        <div style="position:absolute;top:15%;left:46%;width:10px;height:10px;background:blue;" id="blue" onclick="color(this)"></div>
+        <div style="position:absolute;top:15%;left:47%;width:10px;height:10px;background:red;" id="red" onclick="color(this)"></div>
+        <div style="position:absolute;top:17%;left:45%;width:10px;height:10px;background:yellow;" id="yellow" onclick="color(this)"></div>
+        <div style="position:absolute;top:17%;left:46%;width:10px;height:10px;background:orange;" id="orange" onclick="color(this)"></div> -->
+        <!-- <input type="button" value="save" id="btn" size="30" onclick="save()" style="position:absolute;top:55%;left:10%;"> -->
+        <!-- <input type="button" value="predict" id="prd" size="33" onclick="predict()" style="position:absolute;top:55%;left:20%;"> -->
+    </body>
+    </html>
