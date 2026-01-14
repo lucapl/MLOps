@@ -128,10 +128,8 @@ def objective(trial):
     )
 
     logger = MLFlowLogger(experiment_name="lightning_logs", run_name=f"optuna_logs/trial_{trial.number}", tracking_uri=mlflow.get_tracking_uri())
-    # Optuna pruning callback
     pruning_callback = PyTorchLightningPruningCallback(trial, monitor='val_loss')
 
-    # Create trainer
     trainer = L.Trainer(
         max_epochs=5,
         callbacks=[pruning_callback],
@@ -140,11 +138,8 @@ def objective(trial):
         enable_model_summary=False  
     )
 
-
-    # Training the model
     trainer.fit(model, data)
 
-    # Final validation loss
     return trainer.callback_metrics['val_loss'].item()
 
 
