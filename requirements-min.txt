@@ -1,0 +1,7 @@
+fastapi==0.123.4
+litserve==0.2.16
+numpy==2.3.5
+onnxruntime==1.23.2
+# onnxruntime-gpu
+
+pillow==12.0.0
