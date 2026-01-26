@@ -6,14 +6,15 @@ import logging
 import os
 import sys
 import uuid
-from datetime import datetime
-from io import BytesIO
 from urllib.parse import unquote_plus
 
 import boto3
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
+
+# from datetime import datetime
+# from io import BytesIO
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -22,28 +23,16 @@ s3_client = boto3.client("s3")
 # _bucket_name = "lambda-mlops"
 
 
-# class NumberEngine(ls.LitAPI):
 class NumberEngine:
     def __init__(self, model_path="model.onnx"):
         # self.inf_sess = ort.InferenceSession("../model.onnx")
         self.inf_sess = ort.InferenceSession(model_path)
 
-    # def decode_request(self, request, **kwargs):
-    # img = request.get("input")
-    # img = Image.open(BytesIO(base64.b64decode(img.split(',')[1]))).resize((28, 28))
-    # img = np.array(img, dtype=np.float32)[:, :, 3]/255
-    # img = (img - 0.1307)/0.3081
-
-    # return img.reshape((1,1,28,28))
-
     def predict(self, x):
         y = self.inf_sess.run(None, {"x": x})
-        return y[0]  # first output?
-
-    # def encode_response(self, y):
+        return y[0]  # first output
 
     def save_preds(self, inp, output):
-        # with open(inp) as f:
         img = Image.open(inp).resize((28, 28))
         img = np.array(img, dtype=np.float32)[:, :, 3] / 255
         img = (img - 0.1307) / 0.3081
@@ -97,19 +86,7 @@ def lambda_handler(event, context):
         "details": r,
     }
 
-    # file_name = f"hello-world-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt"
-    # print("XD")
-    # download from bucket
-    # try:
-    # s3_client.put_object(
-    # Bucket=bucket_name,
-    # Key=file_name,
-    # Body='Hello World'
-    # )
-    # print("Successfully saved to %s/%s", bucket_name, file_name)
-    # except Exception as e: # Too generic catch
-    # print("Error saving to S3: %s", e)
-    # raise
+    # s3_client.put_object(...
 
 
 if __name__ == "__main__":
